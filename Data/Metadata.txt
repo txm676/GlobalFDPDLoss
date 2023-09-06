@@ -1,0 +1,36 @@
+#######Datasets MetaData###############
+
+##allSp_phylo
+Island endemism status, IUCN Red List classification, generation length and extinction status information
+for all species (extant and extinct), following the BirdTree taxonomy.
+IslandEndemic2 = island endemism status based on the seabird sensitivity analysis
+
+#AVONET_BIRDLIFE_040222 
+Trait data for extant species from the published AVONET dataset, following the Birdlife taxonomy.
+
+#DB_ExtinctImputedSps_Averages_150623
+Trait data for extinct species, as well island endemic classifications, extinction time period and 
+location data, for all extinct species.
+
+#dendro_all (.R file)
+The dendrogram (built using neighbour joining) with all extant and extinct species
+
+#future.rds
+The future extinction simulation data. A list with six elements, each storing individual simulations according
+to a specific taxonomy and species subset:
+[1] "Birdlife_all"  "Birdlife_isl" 
+[3] "Birdtree_all"  "Birdtree_isl" 
+[5] "Birdlife_isl2" "Birdtree_isl2"
+isl2 = seabird sensitivity data
+
+#JetzExtinct50_25082323
+The 50 phylogenies, each with all extant and extinct species.
+
+#Master_phylo_spreadsheet_V12
+The spreadsheet which is used with the ExtinctPhylogeny R script to graft all extinct species onto
+the BirdTree phylogenies. 
+Grafting codes are located in the Type column, and code information is provided in the Supp info.
+
+#sayol_updatedJW
+Island endemism, generation length and IUCN Red list status data for all extant species following the
+Birdlife taxonomy.
