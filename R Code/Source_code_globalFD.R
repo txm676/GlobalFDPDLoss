@@ -15,10 +15,10 @@ library(cowplot)
 ##############################################################################
 
 #Load in AVONET Trait data
-extant <- read.csv("Data\\AVONET_BIRDLIFE_040222.csv")
+extant <- read.csv("Data\\AVONET_BIRDLIFE.csv")
 
 #load in IUCN and island endemic classifications
-sayol <- read.csv("Data\\sayol_updatedJW.csv")
+sayol <- read.csv("Data\\allSp_birdlife.csv")
 
 #if seabird sensitivity test, swap island endemic columns
 if (seabird){
@@ -26,7 +26,7 @@ if (seabird){
 }
 
 #Load in extinct species data
-extinct <- read.csv("Data\\DB_ExtinctImputedSps_Averages_150623.csv")
+extinct <- read.csv("Data\\ExtinctImputedTraits_Averages.csv")
 
 #create HWI column
 extinct <- mutate(extinct, Hand.Wing.Index = 100 * (Kipps.Distance / Wing.Length))
@@ -140,7 +140,7 @@ if (seabird){
   future <- future[which(names(future) %in% c("Birdtree_all", "Birdtree_isl"))]
 }
 
-phylo_all <- readRDS("Data\\JetzExtinct50_25082323.rds")
+phylo_all <- readRDS("Data\\JetzExtinct50Trees.rds")
 
 #this is only for checks, as extinct2/3 not used again for phylo analyses
 extinct3 <- extinct2
