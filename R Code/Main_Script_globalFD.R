@@ -1079,3 +1079,231 @@ tra_remove_mat %>% round(2) %>% wcs()
 #revert back to main analysis
 tra_remove <- NULL
 source("R Code\\Source_code_globalFD.R")
+
+#############################################################
+########Morphospace Figure 1###############################
+###########################################################
+morpho_plot <- allSp2 %>%
+  select(species, PC1, PC2, status)
+
+#Stored FD contribution values (dendrogram) for all species
+load("Results\\Contribution\\contributions_relF_FD_all.R")
+
+contrVals_p4 <- lapply(k5Cont, function(x) x[[3]])
+
+cdf <- data.frame("species" = names(contrVals_p4[[1]]),
+                  "contribution" = as.vector(contrVals_p4[[1]]))
+
+cdf <- cdf[match(morpho_plot$species,
+                  cdf$species),]
+
+if (!identical(morpho_plot$species, cdf$species)){
+  stop("the Band")
+}
+
+morpho_plot$contribution <- cdf$contribution
+
+IUCN <- morpho_plot$status ; unique(IUCN)
+IUCN <- ifelse(IUCN == "LC" | IUCN == "NT" | IUCN == "DD", "LR", IUCN)
+IUCN <- ifelse(IUCN == "CR" | IUCN == "EN" | IUCN == "VU", "TH", IUCN)
+
+morpho_plot$IUCN <- IUCN
+
+morpho_plot$IUCN <- factor(morpho_plot$IUCN, 
+                           levels=c("LR", "TH", "EX"))
+morpho_plot$contributionPer <- (morpho_plot$contribution/sum(morpho_plot$contribution)) * 100
+
+g1 <- ggplot(morpho_plot, aes(x=PC1, y=PC2)) + 
+  geom_point(aes(color=IUCN,
+                 size=contributionPer), alpha=0.6) +
+  scale_radius(name = "Contribution to FD (%)", range = c(0, 10), 
+               breaks = c(0.005, 0.01, 0.02, 0.04, 0.06)) + theme_bw() + 
+  ylim(c(min(morpho_plot$PC2), max(morpho_plot$PC2))) + 
+  xlim(c(min(morpho_plot$PC1), max(morpho_plot$PC1))) +
+  scale_color_manual(name = "Period", 
+                     values = rev(c("#DB1D1D", "#00366C", 
+                                    "#C3DBFD"))) +
+  labs(x='PC1 (73%)', y="PC2 (8%)") +
+  theme(legend.title = element_text(size=14),
+        legend.text = element_text(size = 14),
+        axis.text.y = element_text(size=14),
+        axis.text.x = element_text(size=14), 
+        axis.title=element_text(size=14),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank()) +
+  guides(color = guide_legend(override.aes = list(size = 5))) + 
+  ylim(c(-4, 4)) + xlim(c(-12, 7)) 
+g1 
+
+# Add density curves to y and x axis
+xdens <- 
+  axis_canvas(g1, axis = "x") + 
+  geom_density(data = morpho_plot, trim = F, 
+               aes(x = PC1, fill = IUCN), alpha = 0.6, color=NA) +
+  scale_fill_manual(name = "", 
+                    values = rev(c("#DB1D1D", "#00366C", "#C3DBFD"))) +
+  scale_color_manual(name = "", 
+                     values = rev(c("#DB1D1D", "#00366C", "#C3DBFD")))
+
+ydens <-
+  axis_canvas(g1, axis = "y", 
+              coord_flip = TRUE) + 
+  geom_density(data = morpho_plot, 
+               aes(x = PC2, fill = IUCN), alpha = 0.6, color=NA) +
+  scale_fill_manual(name = "", 
+                    values = rev(c("#DB1D1D", "#00366C", "#C3DBFD"))) +
+  scale_color_manual(name = "", 
+                     values = rev(c("#DB1D1D", "#00366C", "#C3DBFD"))) +
+  coord_flip() 
+
+g2 <- g1 %>%
+  insert_xaxis_grob(xdens, grid::unit(0.5, "in"), position = "top") %>%
+  insert_yaxis_grob(ydens, grid::unit(0.5, "in"), position = "right") %>%
+  ggdraw()
+
+jpeg("morphospace_density.jpeg", width = 18, height =12,
+     res = 300, units = "cm")
+g2
+dev.off()
+
+#############################################################
+########Map Figure 1###############################
+###########################################################
+
+library(sf)
+library("rnaturalearth")
+library("rnaturalearthdata")
+world <- ne_countries(scale = "medium", returnclass = "sf")                    # Get a world map
+world <- dplyr::filter(world, !region_un == "Antarctica")                      # Remove Antarctica
+
+#' For each area, find the number of species that went extinct either EP or EH
+#' We need a df with the area then the number of each extinction type, plus the lat/lon
+df1 <- filter(extinct, ExtinctionPeriod == "EP")                               # Split the data into EH and EP
+df2 <- filter(extinct, ExtinctionPeriod == "EH")
+{
+  
+  ### Total species on each archipelago
+  
+  #combine the three sets of island group columns
+  #this is because some species are on > 1 archipelago
+  e1 <- dplyr::select(extinct, Isl_group_map:LON)
+  e2 <- dplyr::select(extinct, Isl_group_map2:LON2) %>%
+    rename(Isl_group_map = Isl_group_map2,
+           LAT = LAT2, LON = LON2)
+  e3 <- dplyr::select(extinct, Isl_group_map3:LON3) %>%
+    rename(Isl_group_map = Isl_group_map3,
+           LAT = LAT3, LON = LON3)
+  eall <- rbind.data.frame(e1, e2, e3)
+  all_N <- eall %>%
+    group_by(Isl_group_map) %>%
+    summarise("N" = n())
+  #remove the NA row
+  eall_NA <- which(is.na(all_N$Isl_group_map))
+  if (length(eall_NA) !=1) stop("sunday morning")
+  all_N <- all_N[-eall_NA,] 
+  #add lat and lon to all_N for each unique allipelago
+  all_M <- match(all_N$Isl_group_map, extinct$Isl_group_map)
+  all_N$LAT <- extinct$LAT[all_M]
+  all_N$LON <- extinct$LON[all_M]
+  all_N$IslandEndemic <- extinct$IslandEndemic[all_M]
+  
+  
+  ### Just EP
+  
+  #combine the three sets of island group columns
+  #this is because some species are on > 1 archipelago
+  e1 <- dplyr::select(df1, Isl_group_map:LON)
+  e2 <- dplyr::select(df1, Isl_group_map2:LON2) %>%
+    rename(Isl_group_map = Isl_group_map2,
+           LAT = LAT2, LON = LON2)
+  e3 <- dplyr::select(df1, Isl_group_map3:LON3) %>%
+    rename(Isl_group_map = Isl_group_map3,
+           LAT = LAT3, LON = LON3)
+  eall <- rbind.data.frame(e1, e2, e3)
+  df1_arch <- eall %>%
+    group_by(Isl_group_map) %>%
+    summarise("EP" = n())
+  #remove the NA row
+  eall_NA <- which(is.na(df1_arch$Isl_group_map))
+  if (length(eall_NA) !=1) stop("sunday morning")
+  df1_arch <- df1_arch[-eall_NA,]
+  #add lat and lon to df1_arch for each unique archipelago
+  arch_M <- match(df1_arch$Isl_group_map, df1$Isl_group_map)
+  df1_arch$LAT <- df1$LAT[arch_M]
+  df1_arch$LON <- df1$LON[arch_M]
+  df1_arch$IslandEndemic <- df1$IslandEndemic[arch_M]
+  
+  
+  ### Just EH
+  
+  #combine the three sets of island group columns
+  #this is because some species are on > 1 archipelago
+  e1 <- dplyr::select(df2, Isl_group_map:LON)
+  e2 <- dplyr::select(df2, Isl_group_map2:LON2) %>%
+    rename(Isl_group_map = Isl_group_map2,
+           LAT = LAT2, LON = LON2)
+  e3 <- dplyr::select(df2, Isl_group_map3:LON3) %>%
+    rename(Isl_group_map = Isl_group_map3,
+           LAT = LAT3, LON = LON3)
+  eall <- rbind.data.frame(e1, e2, e3)
+  df2_arch <- eall %>%
+    group_by(Isl_group_map) %>%
+    summarise("EH" = n())
+  #remove the NA row
+  eall_NA <- which(is.na(df2_arch$Isl_group_map))
+  if (length(eall_NA) !=1) stop("sunday morning")
+  df2_arch <- df2_arch[-eall_NA,]
+  #add lat and lon to df2_arch for each unique archipelago
+  arch_M <- match(df2_arch$Isl_group_map, df2$Isl_group_map)
+  df2_arch$LAT <- df2$LAT[arch_M]
+  df2_arch$LON <- df2$LON[arch_M]
+  df2_arch$IslandEndemic <- df2$IslandEndemic[arch_M]
+  
+}
+arch_N <- merge(df1_arch, df2_arch, 
+                by = "Isl_group_map", all = T)             # Join the datasets together
+arch_N <- arch_N[,c(1,2,6)]                                                    # Subset the island name, EP and EH cols
+arch_N[is.na(arch_N$EP),]$EP <- 0                                              # Replace NA with 0
+arch_N[is.na(arch_N$EH),]$EH <- 0                                              # Replace NA with 0
+arch_N <- dplyr::left_join(arch_N, all_N, by = "Isl_group_map")                # Join the datasets
+arch_N$EP_con <- 0                                                             
+arch_N$EH_con <- 0                                                             
+arch_N$EP_con[14:17] <- arch_N$EP[14:17]                                       
+arch_N$EH_con[14:17] <- arch_N$EH[14:17]                                       
+arch_N$EP[14:17] <- 0                                                          
+arch_N$EH[14:17] <- 0                                                         
+sea_col <- rgb(140,218,255, maxColorValue = 255)                               # Sea colour             
+yel_col <- rgb(254,242,58, maxColorValue = 255)                               
+brow_col <- rgb(216,100,77, maxColorValue = 255)                               
+col1 <- "#3F0E14"
+col2 <- "#F2FFCC"
+
+##These can be include for making the legend
+# arch_N[nrow(arch_N) + 1,] <- c("Legend1", 0, 1, 1, -55.299488, -8.047559, "No", 0,0)
+# arch_N[nrow(arch_N) + 1,] <- c("Legend2", 0, 20, 20, -55.199291, 25.702440, "No", 0,0)
+# arch_N[nrow(arch_N) + 1,] <- c("Legend3", 0, 80, 80, -59.373827, 2.850878, "No", 0,0)
+arch_N[,c(2:6,8,9)] <- apply(arch_N[,c(2:6,8,9)], 2, as.numeric)
+arch_N$N <- arch_N$N + 1  
+
+# Add one to help highlight small values
+g8 <- ggplot(data = world) + 
+  theme_void() +
+  geom_sf(color = "white", fill = "white") +
+  theme(panel.background = element_rect(fill = sea_col),
+        legend.position = "bottom",
+        plot.title = element_blank()) +
+  xlab("") + 
+  ylab("") +
+  geom_scatterpie(data = arch_N,aes(x=LON, y=LAT, r=2*log(N)),
+                  cols = c("EP", "EH", "EP_con", "EH_con"), alpha = 0.7) +
+  scale_fill_manual(values = c(brow_col, yel_col, col1, col2), guide = "none") +
+  geom_scatterpie_legend(seq(1, ceiling(2*log(max(arch_N$N)))), x=-160, y=-55) 
+
+
+jpeg(filename = "Figure1logadd1.jpeg", 
+     width = 20, 
+     height = 15, 
+     units = "cm", 
+     res = 300) # Save the plot out
+g8
+dev.off()
