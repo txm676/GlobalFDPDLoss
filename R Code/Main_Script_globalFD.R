@@ -83,10 +83,10 @@ perc_change(main_run_all1_obs[[1]]$Dispersion)#no dispersion for convex
 obs_vals <- main_run_all1_obs[[1]]
 
 ##Make the inset plots for these runs
-if (meth.hv == "svm"){
+if (meth == "hyper"){
   ggtitlz <- paste0(GEOGz, " - ", meth.hv, gam, "_BS", body_size_CORR) 
 } else{
-  ggtitlz <- paste0(GEOGz, " - ", meth.hv, "_BS", body_size_CORR)
+  ggtitlz <- paste0(GEOGz, " - ", meth, "_BS", body_size_CORR)
 }
 
 IP1 <- hyper_plot(obs_vals, ggtitl = ggtitlz , method = meth,
