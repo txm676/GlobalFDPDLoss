@@ -416,6 +416,8 @@ sasg2 <- apply(res_table, 1, function(x){
          ":", round(x["F_Alpha_Perc_RU"],1), ")")
 })
 
+#write.csv(res_table, file = "main_results.csv")
+
 
 ##PD
 prl_All <- PD_multi_format(phylo_res_list$All_phylo)#all
@@ -434,6 +436,7 @@ pd_res_table <- bind_rows(prl_All[[1]], prl_isl[[1]],
   round(2)
 rownames(pd_res_table) <- c("All_phylo", "Isl_phylo",
                             "Isl2_phylo")
+#write.csv(pd_res_table, file = "pd_results.csv")
 
 
 ##################################################
@@ -545,7 +548,8 @@ rownames(ASR2) <- c("SR_isl")
 
 ttp_df3b <- rbind.data.frame(ttp_df3, ASR1, ASR2)
 
-ttp_df4 <- tidyr::pivot_longer(ttp_df3b, P:'F')
+ttp_df4 <- tidyr::pivot_longer(data = ttp_df3b, 
+                               cols = P:'F')
 ttp_df4$name <- factor(ttp_df4$name, 
                        levels = c("P", "H", "C", "F"))
 
@@ -826,7 +830,7 @@ lapply(HWI_plots_comb, function(x){
  SI_PC[,1:2] <- do.call(rbind, Mass_PC)
  SI_PC[,3] <- do.call(rbind, HWI_PC)[,1]
  SI_PC[,4] <- do.call(c, beak_PC)
- round(SI_PC, 2) %>% wcs()
+ round(SI_PC, 2) %>% write.csv()
  
  #ES / SES values
  SI_ES_mass <- matrix(nrow = 8, ncol = 16)
@@ -995,6 +999,11 @@ i = 1 #Dummy line for RStudio warnings
 #NOTE IN MAIN ANALYSES THIS IS ONLY RUN WITH HYPERVOLUMES;
 #but set to convex here for speed
 
+##NOTE also, while testing the foreach loop did not always work
+#on some people's machines due to access rights, specifically
+#the source(local = TRUE) line. Can easily be changed to a for
+#loop if this happens.
+
 meth = "convex" #"hyper" or "convex" or "tree"
 meth.hv = "svm" #"svm" or "gaussian"
 gam = 0.5 #svm gamma parameter
@@ -1008,7 +1017,8 @@ tra_remove_traits <- c("Beak.Length_Culmen", "Beak.Length_Nares",
                        "Wing.Length", "Kipps.Distance","Tail.Length", 
                        "Mass")
 
-tra_remove_res = foreach(i=seq(from=1, to=(length(tra_remove_traits)*2), by=1),
+tra_remove_res = foreach(i=seq(from=1, 
+                               to=(length(tra_remove_traits)*2), by=1),
                          .inorder = TRUE)  %dopar% {
                            library(dplyr)
                            library(BAT)
@@ -1041,9 +1051,9 @@ tra_remove_res = foreach(i=seq(from=1, to=(length(tra_remove_traits)*2), by=1),
                            #trait_removal sensitivity analysis
                            tra_remove <- tra_remove_traits[k]
                            
-                           source("D:\\documents\\Work\\On-going projects\\Global Bird FD Loss\\Global_FD_Loss\\R_Code\\Source_code_globalFD.R",
+                           source("R Code\\Source_code_globalFD.R",
                                   local = TRUE)
-                           
+
                            tra_remove_obs <- null_hyper(allSp2,
                                                         future_F = future_Fz,
                                                         GEOG = GEOGz, analysis = analyz, 
@@ -1074,7 +1084,7 @@ for (i in 1:length(tra_remove_res)){
   tra_remove_mat[i,] <- tra_remove_res[[i]][[2]]
 }
 
-tra_remove_mat %>% round(2) %>% wcs()
+tra_remove_mat %>% round(2) %>% write.csv()
 
 #revert back to main analysis
 tra_remove <- NULL

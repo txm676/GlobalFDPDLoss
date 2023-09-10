@@ -9,6 +9,14 @@ library(cluster)
 library(ape)
 library(BAT)
 library(cowplot)
+library(hypervolume)
+library(VGAM)
+library(rlang)
+library(data.table)
+library(picante)
+library(gridExtra)
+library(grid)
+library(tidyr) #needs to >= version 1.3.1
 
 ##########################################################################
 ### Load and Format Data############################################
@@ -1395,11 +1403,13 @@ hyper_plot <- function(beak_run_F, ggtitl = "a) All ",
   
   if (method == "hyper" | method == "tree"){
     
-    beak_long <- tidyr::pivot_longer(beak_list, 
-                                     c(Alpha, Dispersion),
-                                     "Metric")
+    beak_long <- tidyr::pivot_longer(data = beak_list, 
+                                     cols = c(Alpha, Dispersion),
+                                     names_to = "Metric")
   } else if (method == "convex"){
-    beak_long <- tidyr::pivot_longer(beak_list, c(Alpha), "Metric")
+    beak_long <- tidyr::pivot_longer(data = beak_list, 
+                                     cols = c(Alpha), 
+                                     names_to = "Metric")
   }
   }#eo if inset only
   
@@ -1417,12 +1427,13 @@ hyper_plot <- function(beak_run_F, ggtitl = "a) All ",
   obs_null2$Type <- factor(obs_null2$Type, 
                            levels = c("P", "H", "C", "F"))
   if (method == "hyper" | method == "tree"){
-    obs_null_2_long <- tidyr::pivot_longer(obs_null2, 
-                                           c(Alpha, Dispersion),
-                                           "Metric")
+    obs_null_2_long <- tidyr::pivot_longer(data = obs_null2, 
+                                           cols = c(Alpha, Dispersion),
+                                           names_to = "Metric")
   } else if (method == "convex"){
-    obs_null_2_long <- tidyr::pivot_longer(obs_null2, 
-                                           c(Alpha), "Metric")
+    obs_null_2_long <- tidyr::pivot_longer(data = obs_null2, 
+                                           cols = c(Alpha), 
+                                           names_to = "Metric")
   }
   
   ###y-axis limits
@@ -1505,12 +1516,13 @@ if (inset_only){
                                             "C2F"))
   
   if (method == "hyper" | method == "tree"){
-    beak_obs_long <- tidyr::pivot_longer(beak_run_F[[1]], 
-                                         c(Alpha, Dispersion), 
-                                         "Metric")
+    beak_obs_long <- tidyr::pivot_longer(data = beak_run_F[[1]], 
+                                         cols = c(Alpha, Dispersion), 
+                                         names_to = "Metric")
   } else if (method == "convex"){
-    beak_obs_long <- tidyr::pivot_longer(beak_run_F[[1]], 
-                                         c(Alpha), "Metric")
+    beak_obs_long <- tidyr::pivot_longer(data = beak_run_F[[1]], 
+                                         cols = c(Alpha), 
+                                         names_to = "Metric")
   } 
   
   ##set point colour based on significance of ES
