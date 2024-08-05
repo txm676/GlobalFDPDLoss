@@ -1,0 +1,125 @@
+#############################################################
+#######Datasets MetaData#####################################
+#############################################################
+
+##allSp_phylo
+Island endemism status, IUCN Red List classification, generation length and extinction status information
+for all species (extant and extinct), following the BirdTree taxonomy.
+
+species = Binomial name (BirdTree taxonomy)
+species_BirdLife = Birdlife binomial name
+Extant = Lists the species as either extant or extinct. 
+ExtinctionPeriod = Groups the species as either Current, EX_Other or EX_IUCN:
+		*Current = extant species
+		*EX_IUCN = species classified as extinct by the IUCN
+		*EX_Other = all other extinct species
+ExtinctionType = Groups the species as either Current, EX_A, EX_U, EX_IUCN:
+		*EX_U = Non-IUCN extinctions of unknown cause
+		*EX_A = Non-IUCN anthropogenic extinctions.
+		*IUCN = species classified as extinct by the IUCN (all anthropogenic)
+
+IslandEndemic = Identifies if the species is an island endemic. Binary (Yes/No).
+IUCN = IUCN red list designation. One of LC (least concern), NT (near threatened), VU (vulnerable), EN (endangered), CR (critically endangered), or DD (data deficient). 
+GenLength = Generation length.
+IslandEndemic2 = island endemism status based on the seabird sensitivity analysis.
+
+##AVONET_BIRDLIFE
+Trait data for extant species from the published AVONET dataset, following the Birdlife taxonomy.
+See Tobias et al. 2022 for details.
+Tobias, J. A., Sheard, C., Pigot, A. L., Devenish, A. J., Yang, J., Sayol, F., ... & Schleuning, M. (2022). AVONET: morphological, ecological and geographical data for all birds. Ecology Letters, 25(3), 581-597.
+
+##ExtinctImputedTraits_Averages
+Trait data for extinct species, as well as island endemic classifications, extinction time period and 
+location data, for all extinct species.
+species = Binomial name (roughly following BirdLife taxonom)
+Genus = Genus
+Family = Family
+Order = Order 
+Jetz_Order = Order following the BirdTree taxonomy. Format is all capitilised. 
+Jetz_Family = Family following the BirdTree taxonomy.
+Jetz_Genus = Genus following the BirdTree taxonomy.
+Beak.Length_Culmen, Beak.Length_Nares, Beak.Width, Beak.Depth, Tarsus.Length, Wing.Length, Kipps.Distance, 
+Tail.Length (all mm), and Mass (g) match the traits in AVONET for extinct species (see above).
+ExtinctionType =  As for the allSp_phylo dataset (described above), with the addition of:
+		EW = extinct in the wild
+ExtinctionPeriod = As for the allSp_phylo dataset (described above), with the addition of EW. 
+ExtinctionPeriodMAP = The same as ExtinctionPeriod but has an extra category (EX_POST1500) for the 19 EX_Other species that are post-1500
+		      extinctions but not currently recognised by the IUCN. Is just used to make the map in Figure 1.
+IslandEndemic = As for the allSp_phylo dataset.
+Isl_group_map = Groups the species into island groups or continental groups for mapping (i.e., Figure 1).
+LAT = Latitude of the island or continental group. 
+LON = Longitude of the island or continental group. 
+Isl_group_map2 = Either NA, i.e., the species is present on no other continental or island group, or groups the species into a second group.
+LAT2 = If applicable, the latitude of the second island or continental group.
+LON2 = If applicable, the latitude of the second island or continental group.
+Isl_group_map3 = Either NA, i.e., the species is present on only one or two continental or island group(s), or groups the species into a third group.
+LAT3 = If applicable, the latitude of the third island or continental group.
+LON3 = If applicable, the latitude of the third island or continental group.
+
+##dendro_all (.RData file)
+The dendrogram (built using neighbour joining) with all extant and extinct species (Birdlife taxonomy). An object of class 'phylo'.
+
+##future.rds
+The future extinction simulation data (.rds). A list with six elements (each corresponding to a specific taxonomy and species subset), each a list of 
+100 elements (from 100 individual simulations) storing the extant species names selected to go extinct:
+[1] "Birdlife_all"  "Birdlife_isl" 
+[3] "Birdtree_all"  "Birdtree_isl" 
+[5] "Birdlife_isl2" "Birdtree_isl2"
+all = global avifauna analyses; isl = island endemic analyses; isl2 = seabird sensitivity analyses
+Birdlife = Birdlife taxonomy; Birdtree = BirdTree taxonomy
+
+##JetzExtinct50Trees
+A list of 50 phylogenies (each of class 'avophylo' and 'phylo'), each containing all of the currently extant species (BirdTree taxonomy) and the extinct species grafted on.
+
+##Master_phylo_spreadsheet_V17
+The spreadsheet which is used within the avotrex R package to graft all extinct species onto
+the BirdTree phylogenies. Also supplied as a data object within the package.
+Grafting codes are located in the Type column, and code information is provided in the Supp info.
+
+Id_sps = The extinct species ID.
+phylo_id2 = The phylo ID. This is used for the grafting order. 
+per_fixed = logical value stating whether or not a species should be grafted at a fixed point along a branch rather than random.
+time_fixed = time point (in Myrs) for grafting specific species at specific time points on the tree.
+Group = Either NA, or the group the extinct species is placed within. Species within groups are then randomised before grafting. 
+species = Species name. Format requires an underscore to separate the genus and the species name. 
+Genus = Genus
+Family = Family
+Order = Order 
+Jetz_Order = Order following the BirdTree taxonomy. Format is all capitilised. 
+Jetz_Family = Family following the BirdTree taxonomy
+Jetz_Genus = Genus following the BirdTree taxonomy
+Type = The type of join required for the extinct species. See table below for details on each code.
+Sister_order = Either NA, or the name of the sister order(s) that the extinct species needs to be joined to or placed within.
+Sister_clade = Either NA, or the name of the sister clade(s) that the extinct species needs to be joined to or placed within.
+Sister_family = Either NA, or the name of the sister family(s) that the extinct species needs to be joined to or placed within.
+Sister_genus = Either NA, or the name of the sister genus or genera that the extinct species needs to be joined to or placed within.
+Sister_species = Either NA, or the name of the sister species that the extinct species needs to be joined to. Genus must also be supplied. 
+Sister_species_group = Either NA, or the names of multiple sister species that the extinct species needs to be randomly grafted to. Species must be separated with a semi-colon,
+and the genus and species name (for an individual species) must be separated with an underscore.
+
+#' Codes | Full name                   | Definition                                                                          |
+#' ------|-----------------------------|-------------------------------------------------------------------------------------|
+#' S     | Sister                      | Grafted as a sister to a known extant or extinct species already in the tree        |
+#' SSG   | Sister species group        | Grafted as a sister to a group of extant and/or extinct species already in the tree |
+#' SGG   | Sister genus group          | Grafted as a sister to an entire extant or extinct genus (i.e., for the first grafted representative of an extinct genus)       |
+#' SGG2  | Sister genus group 2        | Grafted as sister to multiple genera. This was for when a species was sister to a subfamily or some other large specific clade  |
+#' SFG   | Sister family group         | Grafted as a sister to an entire extant or extinct family already present in the  tree (i.e., for the first grafted representative of an extinct family)    |
+#' SOG   | Sister order group          | Grafted as a sister to an entire order already present in the tree (i.e., for the first grafted representative of an extinct order)   |
+#' RSG   | Random species group        | Grafted to a randomly selected species from a pre-defined group of species (i.e., from which is believed to have close affinities    | 
+#' RGG   | Random genus group          | Grafted to a randomly selected species from a given genus. For example, if an  extinct species was believed to be a finch derived from a European finch species, but the exact sister species is unknown.          |
+#' RGG2  | Random genus group 2        | Grafted to a randomly selected species from a group of genera (e.g. when all that is known is that the species is from a specific subfamily). Currently not used in the database, but the relevant functionality has been kept in the R script, as it could be useful for future studies. | 
+#' RFG   | Random family group         | Grafted to a randomly selected species from a given family                          |  
+#' RSGG  | Random sister genus group   | Grafted as sister to a randomly selected genus from a pre-defined group of genera   | 
+#' RSGG2 | Random sister genus group 2 | Grafted as sister to a randomly selected genus from a pre-defined family            |                                                                                                   
+
+##allSp_birdlife
+Island endemism, generation length and IUCN Red list status data for all extant species following the
+Birdlife taxonomy.
+Order = Order according to the Birdlife taxonomy.
+Family = Family according to the Birdlife taxonomy.
+Genus = Genus according to the Birdlife taxonomy
+species = Species name according to the Birdlife taxonomy.
+status = IUCN red list status, one of LC (least concern), NT (near threatened), VU (vulnerable), EN (endangered), CR (critically endangered), or DD (data deficient). 
+IslandEndemic = Identifies if the species is an island endemic. Binary (Yes/No).
+GenLength = Generation length.
+IslandEndemic2 = island endemism status based on the seabird sensitivity analysis.
