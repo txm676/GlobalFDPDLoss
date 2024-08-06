@@ -13,7 +13,7 @@ no_axes <- 5
 body_shape <- FALSE
 
 ##FD or PD analysis
-FD_PD <- "FD"
+FD_PD <- "PD"
 
 #trait_removal sensitivity analysis (NULL for FALSE, or name of trait to remove)
 tra_remove <- NULL
@@ -233,6 +233,10 @@ setwd(gw)
 ######Plotting Main Null Model Analyses############
 ##########################################################
 
+#NOTE - for phylo plots, the diamond
+#colour may need to be manually changed to red / blue as it is based on 
+#majority rules, and a random tree's results is used for plotting.
+
 ##build multi plots
 AJ <- list(c("All_0.5", "a) All - hypervolume0.5", "hyper", "nrd"), 
            c("Isl_0.5", "b) Island - hypervolume0.5", "hyper", "nrd"),
@@ -287,10 +291,6 @@ gridExtra::grid.arrange(grobs = phylo_plots, nrow = 2)
 dev.off()
 
 ##Seabird sensitivity - hyper and phylo###
-#NOTE - for seabird > island > alpha > All->Cur, the diamond
-#colour needs to be manually changed to red as it is based on 
-#majority rules, and only 1/20 phylogenies is significant for this;
-#it just happens to be the one used for plotting.
 seabird_plots <- lapply(main_plots_comb, function(x) x[[1]])[9:10]
 
 jpeg(file = "seabird.jpeg", width = 16, height = 14, units = "cm", res = 300)

@@ -7,7 +7,7 @@ library(foreach)
 library(doParallel)
 library(cluster)
 library(ape)
-library(BAT)
+library(BAT) #needs to >= version 2.9.2
 library(cowplot)
 library(hypervolume)
 library(VGAM)
@@ -375,7 +375,7 @@ if (body_shape){
 }
 
 
-#if doing the trait removal sensitivty test, can't do the beak analyses
+#if doing the trait removal sensitivity test, can't do the beak analyses
 #as one of the beak traits may be removed
 if (is.null(tra_remove)){
 
@@ -446,7 +446,7 @@ perc_change <- function(y){
   return(c(r1,r2,r3,r4))
 }
 
-#dat should be the prehistoric or historic dataset versions,
+#dat = dataset to randomly sample from,
 #n = number of extinctions
 #trait = trait to focus on
 ind_null <- function(dat, trait, n){
@@ -464,9 +464,9 @@ ind_null <- function(dat, trait, n){
 }
 
 
-##Get Z-scores for each null distribution (and 2-tailed P-value)
+##Get Z-scores for each null distribution (and P-value)
 #if null distributions roughly normal use standard P-value and SES,
-#if not use the Lhotsky ES (type == "ES") and 2-sided p-value 
+#if not use the Lhotsky ES (type == "ES") and p-value 
 
 #NOTE that for ES, the maximum value you can seemingly get is an
 #ES value of 3.29, when you have 999 null iterations. When n = 999,
@@ -474,12 +474,14 @@ ind_null <- function(dat, trait, n){
 #of 0.9995 which the probit of is 3.29. Increasing n to 9999 increase the 
 #prob to 0.99995 and ES to 3.89, and so on. 
 
-#for the ES values the p-value is on a continuous scale,
-#from 0-1, with values <0.025 and >0.975 being significant at the 0.05
-#level. Whereas for the SES, the probability is for the lower tail which
-#is then multiplied by 2 to give you the two-tailed test, where 
-#any P < 0.05 is significant. It needs to be divided by 2 if you want
-#to directly compare with the ES version
+#for the ES values the p-value is on a continuous scale, from
+#0-1, with values <0.025 and >0.975 being significant at the 0.05
+#level (2-tailed) or < 0.05 or >0.95 (one tailed, depending on chosen
+#direction). Whereas for the SES, the probability is for the
+#lower tail which is then multiplied by 2 to give you the
+#two-tailed test, where any P < 0.05 is significant. It needs to
+#be divided by 2 if you want to directly compare with the one-tailed ES
+#version
 
 zP <- function(dis, obs, type = "ES"){
   if (type == "SES"){
@@ -502,7 +504,7 @@ zP <- function(dis, obs, type = "ES"){
 #future_F = one run of future extinctions from the
 #main future dataset (from iucn_sim)
 ##Set TRAIT to one of Mass or Hand.Wing.Index
-##set GEOG to one of All, "Yes (for Isl endemic)
+##set GEOG to one of All or Yes (for Isl endemic)
 ##Set TEST to one of Median or SD
 #n = number of null iterations
 #titl = ggplot title
@@ -539,7 +541,7 @@ null_plot <- function(prehistoric_all_F = prehistoric_all,
     }
     Fut1_N <- length(future_F[[1]])#all elements have same N
     
-    #get obs median trait value for prehistoric, historit, current and 2 future periods
+    #get obs median trait value for prehistoric, historic, current and 2 future periods
     obs_P <- dat_ind %>%
       dplyr::select(all_of(TRAIT)) %>%
       summarize(Median = median(!!rlang::sym(TRAIT)), #uses rlang to allow a character be used instead of colname
@@ -1300,7 +1302,7 @@ null_hyper <- function(allSp2_F = allSp2,
         beak_r_obs <- matrix(NA, nrow = 4, ncol = 2)
         colnames(beak_r_obs) <- c("Alpha", "Dispersion")
         
-        #take the mean value from the 5 replication runs
+        #take the mean value from the N replication runs
         hyper_disp_P <- vapply(BAT_beak_obs_P, 
                                function(x) as.vector(BAT::kernel.dispersion(x, func = "divergence", frac = 1)), 
                                FUN.VALUE = numeric(1)) %>% median()
@@ -1901,9 +1903,9 @@ null_model_results_contr <- function(allSp2_contr, FD_PD,
   contr_zp %>% round(3)
 }
 
-##Take the contribution output (either the 5 FD runs or the
-#ten PD runs) and return the median and range of contribution
-#values across these 5 runs, for each of the groups
+##Take the contribution output (either the FD run or the
+#N PD runs) and return the median and range of contribution
+#values across these runs, for each of the groups
 null_format <- function(k5Cont){
   
   cont_p4 <- lapply(k5Cont, function(x) x[[1]][[2]])
